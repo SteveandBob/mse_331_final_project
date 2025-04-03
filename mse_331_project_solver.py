@@ -19,7 +19,6 @@ import gurobipy as gp
 from gurobipy import GRB
 import pandas as pd
 import numpy as np
-import sys
 
 def str_to_int(in_str):
     int_sum = 0
@@ -72,8 +71,8 @@ if __name__ == "__main__":
     lin = gp.LinExpr()
     for i in range(len(df)):
         lin.addTerms(df.at[i, "SKILL"], decision_variables[i])
-    lin.addTerms(1.5, coach_cost)
-    lin.addTerms(1.2, te_cost)
+    lin.addTerms(1.5/3000000, coach_cost)
+    lin.addTerms(1.2/4000000, te_cost)
     model.setObjective(lin, GRB.MAXIMIZE)
 
     # construct binary vars for constraints
@@ -169,4 +168,15 @@ if __name__ == "__main__":
     model.addQConstr(c_constr, GRB.GREATER_EQUAL, 2)
     
     model.optimize()
-    print(model)
+
+    # Display results
+    if model.status == GRB.OPTIMAL:
+        print("\nOptimal Solution:")
+        for v in decision_variables:
+            if v.x == 1:
+                print(f"{v.varName} = {v.x}")
+
+        print(f"{coach_cost} = {coach_cost.x}")
+        print(f"{te_cost} = {te_cost.x}")
+
+        print(f"Optimal Objective Value = {model.objVal}")
